@@ -226,9 +226,11 @@ Which is the max loan amount in Anne Arundel County?  Put your answer in the spa
 **Task** Sort the entire dataset so that the biggest loans appear first, allowing you to see which companies got the biggest loans.
 ```{r}
 ppp_maryland_loans %>%
+  group_by(name, amount) %>%
+  summarise()%>%
   arrange(desc(amount))
 ```
 
 How many companies got $10 million loans? One of them is a restaurant chain.  What kind of food do they serve? Put your answers in the space below.
 **Answer**
-Barbecue
+5 companies. The restaurant chain serves barbecue.
