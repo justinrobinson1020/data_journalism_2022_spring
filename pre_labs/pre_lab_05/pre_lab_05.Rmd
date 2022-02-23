@@ -119,7 +119,7 @@ cleaned_md_loans %>%
 **Task** Follow the directions in the textbook to upload ppp_loans_md.csv.zip to Open Refine. Follow the instructions to clean as many cities as the Open Refine clustering tool can identify.  In class, I will come around to look at the Open Refine project you created to do this.
 
 ``` {r}
-maryland_ppp_with_clean_cities <- read_csv("data/ppp_loans_md_with_clean_cities.csv")
+maryland_ppp_with_clean_cities <- read_csv("data/ppp_loans_md_with_clean_cities.csv.zip")
 ```
 ``` {r}
 maryland_ppp_with_clean_cities %>% 
