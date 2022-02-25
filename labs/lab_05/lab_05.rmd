@@ -1,0 +1,172 @@
+---
+title: "lab_05"
+author: "Sean Mussenden"
+date: "8/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## About this lab
+
+To complete this lab, you need to:
+* run existing code as directed (look for **Task**).
+* modify existing code as directed (look for **Task**).
+* write code in empty codeblocks provided to answer questions included (look for **Q**).
+* write out the answer in the form of a complete sentence in the space given (look for **A**).
+
+When you are finished, commit changes and push to your personal GitHub repo, then submit the URL to this document on ELMS.
+
+## Load libraries and establish settings
+
+You'll need to load two packages for this: the tidyverse and janitor.
+
+**Task** load these two packages.
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+library(tidyverse)
+library(janitor)
+
+```
+
+## Load Data
+
+You'll need to load three data sets for this:
+
+* The West Virginia slice of the PPP loan data (lab_05.rds).
+* A "lookup table" that allows you to translate NAICS (industry) numeric codes to industry titles (naics_codes.csv).
+* A table of West Virginia population by county (American Community Survey, 2019 5-year averages) (wv_population_county.csv).
+
+All three data sets are in the data folder.  Write code to load the three in the codeblock below.
+
+**Task** Create a codeblock below this task, then read the data sets in in and assign them to appropriate variable names. There's a fourth data set you'll use in this lab, too, of selected loans in ZIP Code 25401. But there's no need to load it now.
+
+```{r}
+wv_ppp_loans <- read_rds("data/lab_05.rds")
+naics_codes <- read_csv("data/naics_codes.csv")
+wv_population_by_county <- read_csv("data/wv_population_county.csv")
+```
+
+## Answer questions
+
+**Q1.** In the data folder, there is a csv called zip_25401_loan_sample.csv.  It contains a sample of loans from West Virginia ZIP Code 25401.
+
+As we read earlier this semester, [multiple loan applications coming from multiple businesses at the same residential street address](https://www.nytimes.com/2021/08/17/business/ppp-fraud-covid.html) might point to fraud. Or it could alert us to companies that used [multiple corporate entities to get more money than envisioned](https://www.propublica.org/article/different-names-same-address-how-big-businesses-got-government-loans-meant-for-small-businesses) by the original law that authorized the program.   
+
+You are going to examine this data to see if we can find a lot of loans coming from the same address.  Here's the problem: the street address field is pretty messy.  The same address appears with minor variations --  "1003 Sushruta Dr" vs "1003 SUSHRUTA DR" -- that will prevent proper grouping.
+
+First, upload the data into Open Refine and standardize/clean the address field - make sure to make a copy of that column to work on and to try all of the options for clustering. If you've done it properly, you should have 65 discrete addresses.
+
+Then export the data from Open Refine, and move it to the proper folder.
+
+Next, load it in the codeblock below, assigning it to an appropriate variable name.
+
+Then answer these questions:
+* What is the street address in this data that has the most loans?
+* How many loans are there at that street address?
+* What are the names of the businesses at that address?
+
+**A1.**
+126 E Burke Street has the most loans with 6. The businesses at this address are Drew Holdings LLC, Brix27 LLC, Abraham Ashton, Ronin Properties LLC, and two entries for Hub Co-op LLC.
+
+```{r}
+wv_25401_loans <- read_csv("data/zip_25401_loan_sample_csv_clean.csv")
+
+wv_25401_loans %>% 
+  group_by(address_clean) %>% 
+  summarise(
+    count = n(),
+    name
+            ) %>% 
+  arrange(desc(count))
+
+```
+
+**Q2.** Do some web research on the businesses that answered question 1.  
+
+Google the street address.  Google the business names and search for their corporate records on [Open Corporates](https://opencorporates.com/). Be sure to find the website of the name of the company that appears twice in the list of businesses and develop an understanding of what it does.
+
+Based on your research, does it seem suspicious that this collection of businesses all got loans using the same address? Why or why not. Use specific facts identified in your research to support your position.
+
+**A2.**
+Hub Co-op is a coworking space in Martinsburg, WV so it makes sense that multiple businesses would use this same address. What is less common is that all of these businesses appear to be connected to the same two people Abraham Ashton and Robert Johnson. Looking at open corporates there are several other businesses registered to this address not in the PPP loan data so my guess is this co-working space is also used as a home office for their other businesses.
+
+**Q3.** Start by using the West Virginia slice of the PPP loan data that you loaded at the start of the lab to create a subset of PPP loans in West Virginia's second largest county (which you can find in wv_population_county). And then use that table you created to answer the following questions:
+
+* Which city in that county had the highest number of loans?
+* In that city, which industry title had more loans than any other industry title?
+
+Requirement: you MUST export a dataframe of PPP loans from R Studio at some point in the process (not necessarily at the beginning!), load it into Open Refine, clean the city column, export it from Open Refine, and reimport into R Studio. To export data from R Studio, you will use the write_csv() function, which works like this if we're using the wv_population_county dataframe:
+
+```{r}
+# write_csv accepts 2 arguments: the dataframe and the path to the file you write out
+write_csv(wv_population_county, "data\wv_population_county.csv")
+```
+
+Guidance: there are a lot of steps you'll need to take to answer this question. You may find it helpful to write out in English what you plan to do step-by-step before you start writing code.   
+
+**A3.**
+Berkeley County is the second largest county by population in West Virginia. Within Berkeley County, the city of Martinsburg had the most PPP loans with 1,166. Of the loans granted in Martinsburg the industry that received the most loans was Full-Service restaurants with 50 total loans.
+
+```{r}
+wv_population_by_county %>% 
+  arrange(desc(population_2019))
+
+berkeley_ppp_loans <- wv_ppp_loans %>% 
+  filter(project_county_name == "BERKELEY")
+
+write.csv(berkeley_ppp_loans, "data/berkeley_ppp_loans.csv")
+
+berkeley_ppp_loans_city_clean <- read_csv("data/berkeley_ppp_loans_city_clean_csv.csv")
+
+
+berkeley_ppp_loans_city_clean %>% 
+  group_by(city_clean) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+
+martinsburg_ppp_loans <- berkeley_ppp_loans_city_clean %>% 
+  filter(city_clean == "Martinsburg")
+
+martinsburg_ppp_loans_with_naics <- martinsburg_ppp_loans %>% 
+  left_join(naics_codes, by="naics_code")
+
+martinsburg_ppp_loans_with_naics %>% 
+  group_by(title) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count))
+
+```
+
+**Q4.** What are your two best hypotheses, which you'd need to confirm with reporting and further analysis, that explain why that industry is at the top of the list?
+
+1. Martinsburg is near Harper's Ferry which draws a large number of tourists from DC and Maryland, so restaurants may make up a larger portion of the businesses there.
+
+2. The restaurant industry was one of the hardest hit by the pandemic, so this data is representative of how the industry as a whole was affected by the pandemic.
+
+**A4.**
+
+**Q5.** Start with a dataframe of loans to all businesses in the city and industry that answered question 3. Answer the following questions:
+* What is the name of the business that got the highest approved loan amount?
+* How much was it for?
+* When was it approved?
+* How many jobs does the data say were retained?
+* Is there a difference between the business' name in the PPP data and the name its customers know it by? If so, what is that name?
+* How many locations does this business have?
+* Did one of its locations close during the pandemic, either before or after it got the loan?
+
+Hint: you will not find the answers to the last three questions in the data.  You could call them directly to get that information, but I don't want you to do that for this assignment.  Instead, do some web research. I would start by Googling the company name from the data and looking at the page that comes up for the business from at http://apps.sos.wv.gov/. I would use information I found on that page and use info about the company from Google, the [Wayback machine](https://archive.org/web/) (which lets you look at older versions of a company's website), Yelp, and Facebook.
+
+**A5.**
+Cottle Christi L LLC received the largest PPP loan for 	/$280,434.00 approved on 2/17/21 which saved a reported 94 jobs. The common name that the business is known by is Kitzie's and they currently have two open locations. Kitzie's of Inwood closed in the summer of 2020 before they received their PPP loan. Their first business, Riverbend Bar & Grill appears to have also closed after they received their PPP loan as they have no posts since closing for the season in October of 2021 and the property is now listed as for sale.
+```{r}
+martinsburg_restaurant_loans <- martinsburg_ppp_loans_with_naics %>% 
+  filter(title == "Full-Service Restaurants")
+
+martinsburg_restaurant_loans %>% 
+  arrange(desc(amount))
+```
