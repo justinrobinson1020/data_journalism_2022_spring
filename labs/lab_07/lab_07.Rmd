@@ -111,8 +111,8 @@ for(row_number in 1:nrow(state_info)){
 all_states %>% 
   summarise(
     state,
-    per_10k = total_ppp_loans / population * 10000
+    per_100k = total_ppp_loans / population * 100000
   ) %>% 
-  arrange(desc(per_10k))
+  arrange(desc(per_100k))
 
 ```
